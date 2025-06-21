@@ -36,6 +36,7 @@ REST_FRAMEWORK = {
 }
 
 
+
 # Application definition
 
 INSTALLED_APPS = [
@@ -45,7 +46,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'core'
+    'core',
+    'corsheaders'
+
 ]
 
 MIDDLEWARE = [
@@ -58,6 +61,9 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+
+MIDDLEWARE = ['corsheaders.middleware.CorsMiddleware'] + MIDDLEWARE
+CORS_ALLOW_ALL_ORIGINS = True  # or restrict to React host
 ROOT_URLCONF = 'cvverifier.urls'
 
 TEMPLATES = [

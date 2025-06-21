@@ -4,24 +4,21 @@ from decouple import config
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
-from django.http import JsonResponse
-import PyPDF2
+import PyPDF2, sys
 from io import BytesIO
 
-# GET RESPONSE USING OPENROUTER
 @api_view(['POST'])
 @authentication_classes([])  # Disable CSRF/session check
 @permission_classes([AllowAny])
 def openrouter_match(request):
+    print('the request arrived', file = sys.stderr)
     if request.method == "POST" and request.FILES.get("pdf"):
         pdf_file = request.FILES["pdf"]
         job_details = request.POST.get("job_details")
 
-        # Read and extract text from the PDF
+        # Extract text from PDF
         pdf_reader = PyPDF2.PdfReader(BytesIO(pdf_file.read()))
-        cv_text = ""
-        for page in pdf_reader.pages:
-            cv_text += page.extract_text() or ""
+        cv_text = "".join(page.extract_text() or "" for page in pdf_reader.pages)
 
         if not cv_text.strip() or not job_details:
             return Response({"error": "Missing CV content or job details"}, status=400)
@@ -31,16 +28,11 @@ def openrouter_match(request):
     headers = {
         "Authorization": f"Bearer {config('OPENROUTER_API_KEY')}",
         "Content-Type": "application/json",
-        "HTTP-Referer": "http://localhost:8000",  # Optional
+        "HTTP-Referer": "http://localhost:8000",
         "X-Title": "CVMatcher"
     }
 
-    payload = {
-        "model": "deepseek/deepseek-r1-0528:free",
-        "messages": [
-            {
-                "role": "user",
-                "content": f"""
+    prompt = f"""
 I will give you a CV and a job description.
 
 Your task:
@@ -57,33 +49,41 @@ CV:
 Job Description:
 {job_details}
 """
-            }
-        ]
+
+    payload = {
+        "model": "deepseek/deepseek-r1-0528:free",
+        "messages": [{"role": "user", "content": prompt}]
     }
 
     try:
-        response = requests.post(
+        api_response = requests.post(
             url="https://openrouter.ai/api/v1/chat/completions",
             headers=headers,
             data=json.dumps(payload),
             timeout=15
         )
 
-        if response.status_code != 200:
+        if api_response.status_code != 200:
             return Response({
-                "error": f"OpenRouter error {response.status_code}",
-                "details": response.text
+                "error": f"OpenRouter error {api_response.status_code}",
+                "details": api_response.text
             }, status=500)
 
-        result_text = response.json()["choices"][0]["message"]["content"]
+        result_text = api_response.json()["choices"][0]["message"]["content"].strip()
 
-        # Try to parse result_text as JSON
+        # Remove markdown JSON code block if present
+        if result_text.startswith("```json"):
+            result_text = result_text[7:]
+        if result_text.endswith("```"):
+            result_text = result_text[:-3]
+
         try:
-            parsed_result = json.loads(result_text)
-            return Response(parsed_result)
+
+            parsed_result = json.loads(result_text.strip())
+            print("🔍 Raw result_text:", parsed_result, flush=True)
+            return Response({"result": parsed_result})
         except json.JSONDecodeError:
-            # If model response is not pure JSON, return raw
-            return Response({"result": result_text})
+            return Response({"result": 'result_text'}, status=200)
 
     except requests.exceptions.Timeout:
         return Response({"error": "Request to OpenRouter timed out"}, status=504)
