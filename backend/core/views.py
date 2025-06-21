@@ -111,6 +111,7 @@ def openrouter_match(request):
 # @csrf_exempt
 # def ask_openai(request):
 #     try:
+    # openai.api_key = os.getenv("OPENAI_API_KEY")
 #         response = openai.ChatCompletion.create(
 #             model="gpt-3.5-turbo",
 #             messages=[{"role": "user", "content": "Hello, world!"}]
