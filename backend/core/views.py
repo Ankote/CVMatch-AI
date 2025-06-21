@@ -106,8 +106,6 @@ def openrouter_match(request):
 
 # GET RESPONSE USING OPENAI
 
-
-# openai.api_key = "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"
 # from django.views.decorators.csrf import csrf_exempt
 
 # @csrf_exempt
