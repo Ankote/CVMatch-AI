@@ -1,67 +1,126 @@
-import os
-import pdfplumber
-import openai
-from dotenv import load_dotenv
-from rest_framework.decorators import api_view, parser_classes, authentication_classes, permission_classes
-from rest_framework.parsers import MultiPartParser
+import requests
+import json
+from decouple import config
+from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
+from django.http import JsonResponse
+import PyPDF2
+from io import BytesIO
+import sys
+import openai
+from django.http import JsonResponse
 
-load_dotenv()
-openai.api_key = os.getenv("OPENAI_API_KEY")
+from dotenv import load_dotenv
 
-def extract_text_from_pdf(file):
-    text = ""
-    with pdfplumber.open(file) as pdf:
-        for page in pdf.pages:
-            page_text = page.extract_text()
-            if page_text:
-                text += page_text
-    return text
-
-def match_cv(cv_text, job_description):
-    messages = [
-        {
-            "role": "system",
-            "content": "You are an expert HR assistant. Your job is to compare CVs to job descriptions and give a relevance score from 0 to 100 with explanations."
-        },
-        {
-            "role": "user",
-            "content": f"""
-CV:
-{cv_text}
-
-Job Description:
-{job_description}
-
-Please evaluate the match and return:
-- Score (0 to 100)
-- Matching skills
-- Missing skills
-- Final evaluation summary
-"""
-        }
-    ]
-    response = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",  # Replace with OpenRouter if needed
-        messages=messages
-    )
-    return response['choices'][0]['message']['content']
-
+# GET RESPONSES USING DEEPSEE
 @api_view(['POST'])
-@parser_classes([MultiPartParser])
-@authentication_classes([])         # Disable session auth (which expects CSRF)
-@permission_classes([AllowAny])    # Allow anyone to access
-def analyze_cv(request):
-    cv_file = request.FILES.get('cv_file')
-    job_description = request.data.get('job_description')
+@authentication_classes([])  # Disable CSRF/session check
+@permission_classes([AllowAny])
+def openrouter_match(request):
+    
+    if request.method == "POST" and request.FILES.get("pdf"):
+        pdf_file = request.FILES["pdf"]
+        job_details = request.POST.get("job_details")
+        
+        # Use BytesIO to work with file-like object
+        pdf_reader = PyPDF2.PdfReader(BytesIO(pdf_file.read()))
 
-    if not cv_file or not job_description:
-        return Response({"error": "cv_file and job_description are required"}, status=400)
+        cv_text = ""
+        for page in pdf_reader.pages:
+            cv_text += page.extract_text() or ""  # some pages might return None
+    if not cv_text  or not job_details:
+        return Response({"error": "Missing 'cv' or 'job details'"}, status=400)
 
-    cv_text = extract_text_from_pdf(cv_file)
-    result = match_cv(cv_text, job_description)
 
-    return Response({
-        "result": result
-    })
+    headers = {
+        "Authorization": f"Bearer {config('OPENROUTER_API_KEY')}",
+        "Content-Type": "application/json",
+        "HTTP-Referer": "http://localhost:8000",  # Optional
+        "X-Title": "CVMatcher"
+    }
+
+    payload = {
+        "model": "deepseek/deepseek-r1-0528:free",
+        "messages": [
+            {
+                "role": "user",
+                "content": f"""
+    I will give you a CV and a job description.
+
+    Your task:
+    - Compare the CV to the job description.
+    - Return a JSON response with two fields:
+    - "score": a number from 0 to 100 indicating how well the CV matches the job.
+    - "reason": a short explanation for the score.
+
+    Respond in **valid JSON** only. Do not include any extra text or explanation.
+
+    CV:
+    {cv_text}
+
+    Job Description:
+    {job_details}
+    """
+            }
+        ]
+    }
+
+
+    try:
+        response = requests.post(
+            url="https://openrouter.ai/api/v1/chat/completions",
+            headers=headers,
+            data=json.dumps(payload),
+            timeout=15  # prevent hanging forever
+        )
+
+        if response.status_code != 200:
+            return Response({
+                "error": f"OpenRouter error {response.status_code}",
+                "details": response.text
+            }, status=500)
+
+        data = response.json()
+
+        # # Step 1: Extract the inner JSON string
+        # result_json_string = response["result"]
+
+        # # Step 2: Convert it to a dictionary
+        # result_dict = json.loads(result_json_string)
+
+        # # Now you can access it like normal
+        # print(result_dict["score"], file=sys.stderr)   # → 95
+        # print(result_dict["reason"], file=sys.stderr)  # → The CV demonstrates...
+        return Response({
+            "result": data["choices"][0]["message"]["content"]
+        })
+
+    except requests.exceptions.Timeout:
+        return Response({"error": "Request to OpenRouter timed out"}, status=504)
+
+    except Exception as e:
+        return Response({"error": str(e)}, status=500)
+
+
+
+# GET RESPONSE USING OPENAI
+
+
+# openai.api_key = "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"
+# from django.views.decorators.csrf import csrf_exempt
+
+# @csrf_exempt
+# def ask_openai(request):
+#     try:
+#         response = openai.ChatCompletion.create(
+#             model="gpt-3.5-turbo",
+#             messages=[{"role": "user", "content": "Hello, world!"}]
+#         )
+#         return JsonResponse({"response": response.choices[0].message["content"]})
+    
+#     except openai.error.RateLimitError:
+#         return JsonResponse({"error": "Rate limit exceeded. Please wait and try again later."}, status=429)
+    
+#     except openai.error.OpenAIError as e:
+#         return JsonResponse({"error": str(e)}, status=500)

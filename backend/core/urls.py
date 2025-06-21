@@ -1,6 +1,7 @@
 from django.urls import path
-from .views import match_cv
+from .views import  openrouter_match
 
 urlpatterns = [
-    path('match/', match_cv),
+    path('match/', openrouter_match),
+    # path("match/", ask_openai)
 ]
