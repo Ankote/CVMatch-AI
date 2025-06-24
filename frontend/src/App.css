@@ -1,38 +1,106 @@
+/* App.css */
+body {
+  margin: 0;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #f5f7fa;
+}
+
 .App {
+  max-width: 600px;
+  margin: 40px auto;
+  padding: 30px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+h1 {
+  font-size: 28px;
   text-align: center;
+  color: #333;
+  margin-bottom: 30px;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+form label {
+  font-weight: 600;
+  display: block;
+  margin-top: 20px;
+  margin-bottom: 6px;
+  color: #444;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
+input[type="file"],
+textarea {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 14px;
+  resize: vertical;
 }
 
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
+textarea {
+  min-height: 120px;
+}
+
+button {
+  margin-top: 20px;
+  padding: 12px 24px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  width: 100%;
+}
+
+button:disabled {
+  background-color: #888;
+  cursor: not-allowed;
+}
+
+p {
+  font-size: 16px;
+}
+
+.result-box {
+  margin-top: 30px;
+  padding: 20px;
+  background-color: #e6f7e6;
+  border-left: 6px solid #28a745;
+  border-radius: 8px;
+}
+
+.error-box {
+  margin-top: 30px;
+  padding: 20px;
+  background-color: #ffe6e6;
+  border-left: 6px solid #dc3545;
+  border-radius: 8px;
+  color: #b00020;
+  font-weight: bold;
+}
+
+.loading {
+  text-align: center;
+  color: #555;
+  font-style: italic;
+}
+.result-box {
+  padding: 1rem;
+  border-radius: 10px;
+  margin-top: 1rem;
+  font-size: 1rem;
+  font-weight: 500;
   color: white;
 }
 
-.App-link {
-  color: #61dafb;
+.green-box {
+  background-color: #4caf50; /* green */
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.red-box {
+  background-color: #f44336; /* red */
 }
