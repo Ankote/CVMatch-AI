@@ -1,11 +1,22 @@
-version: '3.9'
+version: '3.8'
 
 services:
-  web:
-    build: .
-    ports:
-      - "8000:8000"
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
     volumes:
       - ./backend:/app
     env_file:
-      - .env
+      - ./backend/.env
+    expose:
+      - 8000
+
+  nginx:
+    build:
+      context: .
+      dockerfile: Dockerfile.nginx
+    ports:
+      - "80:80"
+    depends_on:
+      - backend

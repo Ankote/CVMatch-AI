@@ -1,0 +1,7 @@
+services:
+  - type: web
+    name: backend:
+    env: docker
+    envVars:
+       - key: OPENROUTER_API_KEY
+        sync: false  # Prevents accidental sync (keeps it secret)
