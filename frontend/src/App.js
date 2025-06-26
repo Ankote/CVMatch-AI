@@ -19,7 +19,7 @@ function App() {
     formData.append('job_details', jobText);
 
     try {
-      const res = await fetch('http://localhost:8000/api/match/', {
+      const res = await fetch('http://0.0.0.0/api/match/', {
         method: 'POST',
         body: formData,
       });
@@ -46,7 +46,7 @@ function App() {
         <label>Upload CV (.pdf or .txt)</label>
         <input type="file" onChange={(e) => setCvFile(e.target.files[0])} />
 
-        <label>Paste Job Description</label>
+        <label>Paste Job Description.</label>
         <textarea
           value={jobText}
           onChange={(e) => setJobText(e.target.value)}
