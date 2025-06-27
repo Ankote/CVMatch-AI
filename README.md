@@ -46,7 +46,7 @@ cv-verifier/
 ### 1. Clone the project
 
 ```bash
-git clone https://github.com/ankote/cv-verifier.git
+git clone https://github.com/Ankote/CVMatch-AI
 cd cv-verifier
 ```
 
