@@ -12,6 +12,7 @@ charset-normalizer==3.4.2
 cryptography==45.0.4
 distro==1.9.0
 Django==5.2.3
+django-cors-headers==4.7.0
 djangorestframework==3.16.0
 frozenlist==1.7.0
 google-ai-generativelanguage==0.6.15
@@ -60,4 +61,3 @@ typing_extensions==4.14.0
 uritemplate==4.2.0
 urllib3==2.4.0
 yarl==1.20.1
-django-cors-headers
