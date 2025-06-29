@@ -2,17 +2,16 @@
 FROM node:18 as build
 WORKDIR /app
 
-# Copy only package files first to use Docker layer cache
-COPY package.json package-lock.json ./
+# Copy only package files to leverage Docker cache
+COPY frontend/package.json frontend/package-lock.json ./
+
 RUN npm install
 
-# Now copy the actual app source AFTER installing deps
-COPY . ./
+# Copy the rest of the frontend code
+COPY frontend/ ./
+
 RUN npm run build
 
 # STEP 2: Serve with Nginx
 FROM nginx:alpine
 COPY --from=build /app/build /usr/share/nginx/html
-
-# Optional: expose port
-EXPOSE 80

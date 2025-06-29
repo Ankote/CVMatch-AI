@@ -19,7 +19,7 @@ function App() {
     formData.append('job_details', jobText);
 
     try {
-      const res = await fetch('http://0.0.0.0/api/match/', {
+      const res = await fetch('http://localhost:8000/api/verifier_gemini/', {
         method: 'POST',
         body: formData,
       });
