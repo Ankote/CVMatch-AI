@@ -8,6 +8,7 @@ import PyPDF2, sys
 from io import BytesIO
 import google.generativeai as genai
 import json
+from rest_framework import status
 
 @api_view(['POST'])
 @authentication_classes([])  # Disable CSRF/session check
@@ -17,16 +18,21 @@ def openrouter_match(request):
     if request.method == "POST" and request.FILES.get("pdf"):
         pdf_file = request.FILES["pdf"]
         job_details = request.POST.get("job_details")
-
-        # Extract text from PDF
-        pdf_reader = PyPDF2.PdfReader(BytesIO(pdf_file.read()))
-        cv_text = "".join(page.extract_text() or "" for page in pdf_reader.pages)
+        try:
+            pdf_reader = PyPDF2.PdfReader(BytesIO(pdf_file.read()))
+            cv_text = "".join(page.extract_text() or "" for page in pdf_reader.pages)
+            # print("hello\n\n\n", file=sys.stderr)
+        except Exception as e:
+            return Response(
+                {"error": "Failed to read PDF. The file might be corrupted or unsupported."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
         if not cv_text.strip() or not job_details:
             return Response({"error": "Missing CV content or job details"}, status=400)
     else:
         return Response({"error": "PDF file not provided"}, status=400)
-
+    
     headers = {
         "Authorization": f"Bearer {config('OPENROUTER_API_KEY')}",
         "Content-Type": "application/json",
@@ -35,22 +41,32 @@ def openrouter_match(request):
     }
 
     prompt = f"""
-I will give you a CV and a job description.
+        You are an AI that evaluates how well a candidate's CV matches a job description.
 
-Your task:
-- Compare the CV to the job description.
-- Return a JSON response with two fields:
-  - "score": a number from 0 to 100 indicating how well the CV matches the job.
-  - "reason": a short explanation for the score.
+        Your task:
+        - Carefully compare the provided CV against the job description.
+        - Return a JSON object with two fields:
+        - "score": an integer from 0 to 100 representing the relevance of the CV to the job.
+        - "reason": a brief explanation (1-3 sentences) justifying the score.
 
-Respond in **valid JSON** only. Do not include any extra text or explanation.
+        Rules:
+        - If the job description is vague, irrelevant, or clearly not a real job description, respond with:
+        {{
+            "score": 0,
+            "reason": "Please enter a valid job description."
+        }}
 
-CV:
-{cv_text}
+        Requirements:
+        - Return only valid JSON. No additional comments, explanations, or formatting (e.g., markdown).
+        - Your output must be a single JSON object.
 
-Job Description:
-{job_details}
-"""
+        CV:
+        {cv_text}
+
+        Job Description:
+        {job_details}
+        """
+
 
     payload = {
         "model": "deepseek/deepseek-r1-0528:free",
@@ -98,10 +114,16 @@ def gemini_match(request):
         pdf_file = request.FILES["pdf"]
         job_details = request.POST.get("job_details")
 
-        # Extract text from PDF
-        pdf_reader = PyPDF2.PdfReader(BytesIO(pdf_file.read()))
-        cv_text = "".join(page.extract_text() or "" for page in pdf_reader.pages)
-
+        try:
+                pdf_reader = PyPDF2.PdfReader(BytesIO(pdf_file.read()))
+                cv_text = "".join(page.extract_text() or "" for page in pdf_reader.pages)
+                
+    
+        except Exception as e:
+            return Response(
+                {"error": "Failed to read PDF. The file might be corrupted or unsupported."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
         if not cv_text.strip() or not job_details:
             return Response({"error": "Missing CV content or job details"}, status=400)
     else:
@@ -109,7 +131,7 @@ def gemini_match(request):
    
 
     # Replace with your actual Gemini API key
-    API_KEY = "AIzaSyBY11nrAv50wzvAYGglN-yJl6V5pPMF_nw"
+    API_KEY = config('OPENAI_API_KEY')
 
     # Configure the API
     genai.configure(api_key=API_KEY)
@@ -117,18 +139,28 @@ def gemini_match(request):
     # Create a Gemini model
     model = genai.GenerativeModel("gemini-2.0-flash")
 
-    # Send a prompt
+    # Send a prompt 
+    print(job_details, file=sys.stderr)
    
     prompt = f"""
-        I will give you a CV and a job description.
+        You are an AI that evaluates how well a candidate's CV matches a job description.
 
         Your task:
-        - Compare the CV to the job description.
-        - Return a JSON response with two fields:
-        - "score": a number from 0 to 100 indicating how well the CV matches the job.
-        - "reason": a short explanation for the score.
+        - Carefully compare the provided CV against the job description.
+        - Return a JSON object with two fields:
+        - "score": an integer from 0 to 100 representing the relevance of the CV to the job.
+        - "reason": a brief explanation (1-3 sentences) justifying the score.
 
-        Respond in **valid JSON** only. Do not include any extra text or explanation.
+        Rules:
+        - If the job description is vague, irrelevant, or clearly not a real job description, respond with:
+        {{
+            "score": 0,
+            "reason": "Please enter a valid job description."
+        }}
+
+        Requirements:
+        - Return only valid JSON. No additional comments, explanations, or formatting (e.g., markdown).
+        - Your output must be a single JSON object.
 
         CV:
         {cv_text}
@@ -146,7 +178,6 @@ def gemini_match(request):
         response_result = response_result[:-3]
 
     try:
-
         parsed_result = json.loads(response_result.strip())
         return Response({"result": parsed_result})
     except json.JSONDecodeError:

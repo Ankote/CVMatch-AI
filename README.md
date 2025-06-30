@@ -54,6 +54,7 @@ cd cv-verifier
 
 ```env
 OPENROUTER_API_KEY=your_openrouter_key_here
+OPENAI_API_KEY=your_openai_key_here
 ```
 
 ### 3. Run with Docker Compose
