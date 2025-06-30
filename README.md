@@ -64,7 +64,7 @@ docker-compose up --build
 ```
 
 Visit the app at:  
-➡️ http://localhost:80
+➡️ http://localhost:3000
 
 ---
 
