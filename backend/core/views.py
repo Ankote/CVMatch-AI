@@ -140,7 +140,6 @@ def gemini_match(request):
     model = genai.GenerativeModel("gemini-2.0-flash")
 
     # Send a prompt 
-    print(job_details, file=sys.stderr)
    
     prompt = f"""
         You are an AI that evaluates how well a candidate's CV matches a job description.
