@@ -1,0 +1,31 @@
+Full job description
+Qui sommes-nous ?
+
+Noodra est une Marketplace de l'artisanat, du fait-main inspirés par les pays du monde. C’est une marketplace multi devises et multi langues rassemblant vendeurs et acheteurs.
+
+Dans le cadre du lancement de la plateforme, Noodra recrute un stagiaire Développeur Python Django en télétravail pour :
+
+- Développement des APIs de paiement avec Stripe
+
+- Développement et automatisation de process avec Python et SQL
+
+- Tester les nouvelles fonctionnalité et remonter les bugs
+
+Profil Recherché :
+
+- Vous êtes étudiant(e) en école d’ingénieur ou suivant un cursus universitaire dans l’informatique en Master 1 ou Master 2
+
+- Vous avez des connaissances approfondies en Python, Django, SQL et Git obligatoires
+
+- Vous savez travailler en autonomie avec un esprit d’équipe
+
+- Une appétence pour la data et le e-commerce
+
+- Bonnes qualités humaines
+
+Stage non rémunéré
+
+Type d'emploi : Temps plein, Stage
+Durée du contrat : 4 mois
+
+Rémunération : 1,00DH par mois

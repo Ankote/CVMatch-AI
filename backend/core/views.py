@@ -162,6 +162,8 @@ def gemini_match(request):
         - Return only valid JSON. No additional comments, explanations, or formatting (e.g., markdown).
         - Your output must be a single JSON object.
 
+        notes:
+            -cv and job description   can be writen in French,English
         CV:
         {cv_text}
 

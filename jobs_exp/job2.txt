@@ -1,0 +1,13 @@
+ull job description
+Au sein d'une équipe jeune, dynamique vous serez en charge de la conception et au développement des projets web
+
+Missions principales :
+Développement, intégration WEB
+Conception et développement de nouvelles fonctionnalités
+Maintenance.
+Travail en équipe
+Profil recherché :
+Valeurs humaines : Enthousiaste et consciencieux
+Force de travail et rigoureuse
+Compétences techniques obligatoires: php, Javascript
+Compétences techniques appréciées : ajax,css/html, Symfony, Drupal, Wordpress

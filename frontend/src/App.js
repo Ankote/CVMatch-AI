@@ -4,21 +4,15 @@ import './App.css';
 function App() {
   const [cvFile, setCvFile] = useState(null);
   const [jobText, setJobText] = useState('');
-  const [result, setResult] = useState(null);
+  const [result, setResult] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setResult(null);
+    setResult('');
     setError(null);
-
-    if (!cvFile || !jobText.trim()) {
-      setError("Both CV and job description are required.");
-      setLoading(false);
-      return;
-    }
 
     const formData = new FormData();
     formData.append('pdf', cvFile);
@@ -36,7 +30,7 @@ function App() {
       }
 
       const data = await res.json();
-      setResult(data); // store full result: { score, reason }
+      setResult(data.result || 'No result');
     } catch (err) {
       setError(err.message);
     } finally {
@@ -52,7 +46,7 @@ function App() {
         <label>Upload CV (.pdf or .txt)</label>
         <input type="file" onChange={(e) => setCvFile(e.target.files[0])} />
 
-        <label>Paste Job Description</label>
+        <label>Paste Job Description.</label>
         <textarea
           value={jobText}
           onChange={(e) => setJobText(e.target.value)}
@@ -67,7 +61,7 @@ function App() {
 
       {error && (
         <div className="error-box">
-          <strong>Error:</strong> {error}
+          Error: {error}
         </div>
       )}
 
@@ -79,11 +73,13 @@ function App() {
               : 'red-box'
           }`}
         >
-          <strong>Match Result:</strong>
-          <p><strong>Score:</strong> {result.score}</p>
-          <p><strong>Reason:</strong> {result.reason}</p>
+          <strong>Match Result:</strong><br />
+          {result.score && <p><strong>Score:</strong> {result.score}</p>}
+          {!result.score && !result.reason && <p>{result}</p>}
+          {result.reason && <p><strong>Reason:</strong> {result.reason}</p>}
         </div>
       )}
+
     </div>
   );
 }
