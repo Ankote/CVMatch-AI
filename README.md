@@ -101,7 +101,7 @@ python manage.py runserver
 ## 🧠 Credits
 
 - Created by **Ayoub Ankote** @ 1337 / 42 Network  
-- AI powered by **OpenRouter API**  
+- AI powered by **OpenRouter API**  **Gemini API**  
 - Inspired by real-world job application challenges
 
 ---
