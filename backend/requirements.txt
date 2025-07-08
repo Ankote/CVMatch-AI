@@ -61,3 +61,8 @@ typing_extensions==4.14.0
 uritemplate==4.2.0
 urllib3==2.4.0
 yarl==1.20.1
+djangorestframework==3.16.0
+djangorestframework_simplejwt==5.5.0
+PyJWT==2.9.0
+oauthlib==3.3.1
+django-oauth-toolkit
