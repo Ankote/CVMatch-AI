@@ -66,3 +66,5 @@ djangorestframework_simplejwt==5.5.0
 PyJWT==2.9.0
 oauthlib==3.3.1
 django-oauth-toolkit
+django-cors-headers==4.7.0
+psycopg2-binary>=2.9

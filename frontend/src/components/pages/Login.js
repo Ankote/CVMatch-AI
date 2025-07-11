@@ -59,7 +59,6 @@ export default function Login() {
 
   return (
     <div className="login-container">
-      <h1 className="login-first">{message}</h1>
       <h1>Sign in to your account</h1>
       {error?.message && <h3 className="login-first">{error.message}</h3>}
 

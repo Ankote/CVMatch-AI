@@ -1,5 +1,5 @@
 import { useState } from 'react';
-
+import './matchCv.css'
 function MatchCv() {
   const [cvFile, setCvFile] = useState(null);
   const [jobText, setJobText] = useState('');

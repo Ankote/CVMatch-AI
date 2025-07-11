@@ -78,6 +78,10 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'corsheaders.middleware.CorsMiddleware',
 ]
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+]
+CORS_ALLOW_CREDENTIALS = True
 
 
 MIDDLEWARE = ['corsheaders.middleware.CorsMiddleware'] + MIDDLEWARE
@@ -107,12 +111,19 @@ WSGI_APPLICATION = 'cvverifier.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
+
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',  # Specifies that Django should use PostgreSQL as the database backend.
+        'NAME': os.getenv('POSTGRES_DB', 'app_db'),  # Database name, defaulting to 'restaurant_db' if not set in environment variables.
+        'USER': os.getenv('POSTGRES_USER', 'user'),  # Database username, defaulting to 'restaurant_user'.
+        'PASSWORD': os.getenv('POSTGRES_PASSWORD', '12345'),  # Database password, defaulting to 'your_password'.
+        'HOST': os.getenv('POSTGRES_HOST', 'db'),  # Database host, defaulting to 'db' (useful when running inside Docker).
+        'PORT': os.getenv('POSTGRES_PORT', '5432'),  # Database port, defaulting to PostgreSQL's default port 5432.
     }
 }
+
+
 
 
 # Password validation

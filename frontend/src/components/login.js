@@ -1,61 +1,112 @@
-import { useState, useContext, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import api from "../api/axios"; // your axios instance
-import { AuthContext } from "../context/AuthContext";
-import { ThemeToggle } from "../components/ThemeToggle";
-
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import React from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { loginUser } from "../../api/api";
+import { GoogleLogin } from "@react-oauth/google";
+import { useAuth } from "../../context/AuthProvider";
+import "./Login.css";
 
 export default function Login() {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-  const navigate = useNavigate();
-  const { loginUser } = useContext(AuthContext);
+  const [loginFormData, setLoginFormData] = React.useState({
+    username: "",
+    password: "",
+  });
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      const res = await api.post("/token/", { username, password });
-      loginUser(res.data);
-      navigate("/dashboard");
-    } catch (err) {
-      setError("Invalid username or password");
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { accessToken, setAccessToken } = useAuth();
+  const [status, setStatus] = React.useState("idle");
+  const [error, setError] = React.useState(null);
+  const message = location.state?.message || "";
+  const from = location.state?.from || "/match";
+
+  React.useEffect(() => {
+    if (accessToken) {
+      navigate(from);
     }
-  };
+  }, [accessToken]);
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    const formEl = new FormData(e.currentTarget);
+    const email = formEl.get("email");
+    const password = formEl.get("password");
+    setStatus("submitting");
+    try {
+      const res = await loginUser({ username: email, password: password });
+      setAccessToken(res.access);
+      setError(null);
+      localStorage.setItem("my_token", res.access);
+      navigate(from, { replace: true });
+    } catch (err) {
+      setError(err);
+    } finally {
+      setStatus("idle");
+    }
+  }
+
+  function handleChange(e) {
+    const { name, value } = e.target;
+    setLoginFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  }
+
+  function handleLogout() {
+    localStorage.removeItem("my_token");
+    setAccessToken(null);
+    navigate("/login");
+  }
 
   return (
-    <div className="min-h-screen bg-background text-foreground flex items-center justify-center relative">
-      <div className="absolute top-4 right-4">
-        <ThemeToggle />
-      </div>
+    <div className="login-container">
+      <h1 className="login-first">{message}</h1>
+      <h1>Sign in to your account</h1>
+      {error?.message && <h3 className="login-first">{error.message}</h3>}
 
-      <Card className="w-full max-w-md shadow-lg">
-        <CardHeader>
-          <CardTitle className="text-center text-2xl font-semibold">Login</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <Input
-              placeholder="Username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              required
-            />
-            <Input
-              type="password"
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-            {error && <p className="text-red-500 text-sm">{error}</p>}
-            <Button type="submit" className="w-full">Login</Button>
-          </form>
-        </CardContent>
-      </Card>
+      <form onSubmit={handleSubmit} className="login-form">
+        <input
+          name="email"
+          onChange={handleChange}
+          type="text"
+          placeholder="Username/Email"
+          value={loginFormData.email}
+        />
+        <input
+          name="password"
+          onChange={handleChange}
+          type="password"
+          placeholder="Password"
+          value={loginFormData.password}
+        />
+        <button disabled={status === "submitting"}>
+          {status === "idle" ? "Log in" : "Logging in..."}
+        </button>
+
+        <div style={{ marginTop: "20px" }}>
+          <GoogleLogin
+            onSuccess={(credentialResponse) => {
+              const token = credentialResponse.credential;
+              fetch("http://localhost:8000/auth/google-login/", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ token }),
+              })
+                .then((res) => res.json())
+                .then((data) => {
+                  localStorage.setItem("my_token", data.access);
+                  setAccessToken(data.access);
+                  navigate("/match");
+                });
+            }}
+            onError={() => console.log("Google Login Failed")}
+          />
+        </div>
+
+        <button type="button" onClick={handleLogout} className="logout-button">
+          Logout
+        </button>
+      </form>
     </div>
   );
 }

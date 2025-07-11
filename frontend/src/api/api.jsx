@@ -32,20 +32,28 @@ export async function loginUser(creds) {
   }
 }
 
+export async function verifierToken() {
+  const token = localStorage.getItem("my_token");
 
-export async function refreshAccessToken() {
   try {
     const response = await axios.post(
-      "http://127.0.0.1:8000/users/token/refresh/", // ✅ Fixed URL
-      {}, // ✅ Empty body since refresh token is in HTTP-only cookie
-      { withCredentials: true } // ✅ Ensures cookies are sent
+      "http://127.0.0.1:8000/auth/verify/",
+      { token }, // This becomes JSON: { "token": "value" }
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+        withCredentials: true,
+      }
     );
-    return response.data.access;
+
+    return response.status;
   } catch (error) {
     console.error(
-      "Token refresh failed:",
+      "Token verify failed:",
       error.response?.data || error.message
     );
-    return null;
+    return false;
   }
 }
+http://localhost:8000/auth/token/verify/

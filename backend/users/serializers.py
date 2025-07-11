@@ -1,17 +1,17 @@
 # VanLifeApp/serializers.py
 from rest_framework import serializers
 from django.contrib.auth import authenticate
-from .models import User, VanImage, Vans
+from .models import User
 
 
-# class UserSerializer(serializers.HyperlinkedModelSerializer):
+class UserSerializer(serializers.HyperlinkedModelSerializer):
     
-#     class Meta:
-#         model = User
-#         fields = ['id', 'username', 'first_name', 'last_name']
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'first_name', 'last_name']
 
-#     def create(self, validated_data):
-#         return User.objects.create(**validated_data)
+    def create(self, validated_data):
+        return User.objects.create(**validated_data)
     
 class RegisterUserSerializer(serializers.ModelSerializer):
     """the password field in the User model is not part of the default fields included by DRF

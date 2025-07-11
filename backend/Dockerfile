@@ -15,4 +15,4 @@ RUN chmod +x /backend/data/create_superuser.py
 
 COPY ./ ./
 
-CMD ["sh", "-c", "python manage.py makemigrations && python manage.py migrate --noinput && python create_superuser.py && gunicorn --chdir . cvverifier.wsgi:application", "--bind 0.0.0.0:8000"]
+CMD ["sh", "-c", "python manage.py makemigrations && python manage.py migrate --noinput && python create_superuser.py && gunicorn --chdir . cvverifier.wsgi:application --bind 0.0.0.0:8000"]

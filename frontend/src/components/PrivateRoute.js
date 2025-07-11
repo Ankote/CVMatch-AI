@@ -16,7 +16,7 @@ const PrivateRoute = () => {
     }
 
     // Verify token with backend
-    fetch("http://localhost:8000/auth/token/verify/", {
+    fetch("http://localhost:8000/auth/verify/", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

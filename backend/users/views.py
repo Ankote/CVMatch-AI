@@ -1,97 +1,113 @@
-
-from .models import Vans
-from .serializers import VanSerializer
-from django.shortcuts import render
-from .serializers import RegisterUserSerializer, VanSerializer, UserSerializer
-from rest_framework.reverse import reverse
-from django.contrib.auth import authenticate
-from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework.views import APIView
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from rest_framework import status
-from django.conf import settings
-from rest_framework_simplejwt.views import TokenRefreshView
-from .models import User, Vans, VanImage
-import logging
-from rest_framework.permissions import IsAuthenticated
-from django.shortcuts import get_object_or_404
+from rest_framework.status import HTTP_400_BAD_REQUEST
+from rest_framework_simplejwt.tokens import RefreshToken
+from google.oauth2 import id_token
+from google.auth.transport import requests
+from rest_framework.views import APIView
+from django.contrib.auth.hashers import check_password
+from django.contrib.auth import get_user_model
 import sys
-logger = logging.getLogger(__name__)
-# Create your views here.
+from rest_framework import status
+from rest_framework.permissions import IsAuthenticated
 
-class RegisterView(APIView):
+User = get_user_model()
+
+class PasswordResetVIEW(APIView):
+    permission_classes = [IsAuthenticated]
+
     def post(self, request):
-        serializer = RegisterUserSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            username = request.data.get('username')
-            password = request.data.get("password")
-            authUser = authenticate(username=username, password=password)
-            if (authUser):
-                refresh_token = RefreshToken.for_user(authUser)
-                return Response({'refresh': str(refresh_token), "access" : str(refresh_token.access_token)}, status=status.HTTP_201_CREATED)
-            else:
+        user = request.user
+        old_password = request.data.get('oldPassword')
+        new_password = request.data.get('newPassword')
+
+        if not new_password:
+            return Response(
+                {"error": "New password is required."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if user.has_usable_password():
+            # If user has a usable password, require the old password
+            if not old_password:
                 return Response(
-                {"error": "Authentication failed after registration."},
-                status=status.HTTP_400_BAD_REQUEST)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
+                    {"error": "Oldpassword is required."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            if not check_password(old_password, user.password):
+                return Response(
+                    {"error": "Old password is incorrect."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            if old_password == new_password:
+                return Response(
+                    {"error": "New password must be different from the old password."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
 
-class LoginView(APIView):
-    def post(self, request):
-        username = request.data.get("username")
-        password = request.data.get("password")
-
-        if not username or not password:
+        # Basic validation (you can improve with Django's password validators)
+        if len(new_password) < 5:
             return Response(
-                {"error": "Username and password are required"},
-                status=status.HTTP_400_BAD_REQUEST,
+                {"error": "New password must be at least 5 characters long."},
+                status=status.HTTP_400_BAD_REQUEST
             )
 
-        # Authenticate the user
-        user = authenticate(username=username, password=password)
-        if not user:
-            return Response(
-                {"error": "Invalid credentials"},
-                status=status.HTTP_401_UNAUTHORIZED,
-            )
-        # Generate tokens
-        refresh_token = RefreshToken.for_user(user)
-        access_token = refresh_token.access_token
+        user.set_password(new_password)
+        user.save()
 
-        # Create response with access token in the body
-        response = Response(
-            {"access": str(access_token)},
-            status=status.HTTP_200_OK,
+        return Response(
+            {"message": "Password has been successfully set."},
+            status=status.HTTP_200_OK
+        )
+@api_view(['POST'])
+def google_login(request):
+    token = request.data.get("token")
+    if not token:
+        return Response({"error": "Token missing"}, status=HTTP_400_BAD_REQUEST)
+
+    try:
+        # Verify the token
+        idinfo = id_token.verify_oauth2_token(
+            token,
+            requests.Request(),
+            audience="569212961464-mnoip4nqq0sm0e2p75hr163hntn2l3mg.apps.googleusercontent.com"
         )
 
-        # Set refresh token as an HTTP-only, persistent cookie
-        response.set_cookie(
-            key="refresh_token",
-            value=str(refresh_token),
-            httponly=True,  # Prevent JavaScript access
-            secure=True,  # Set to True in production
-            samesite="Lax",  # Prevent CSRF issues
-            path="/",  # Make it available across the site
-            max_age=7 * 24 * 60 * 60,  # 7 days (in seconds)
-            
+        print(idinfo, file=sys.stderr)
+
+        email = idinfo["email"]
+        first_name = idinfo.get("given_name", "")
+        last_name = idinfo.get("family_name", "")
+
+        # Get or create user
+        user, created = User.objects.get_or_create(
+            username=email,
+            defaults={
+                "email": email,  # assuming username is email
+                "first_name": first_name,
+                "last_name": last_name,
+            }
         )
-        return response
 
+        # Update name if user already exists and data is missing
+        if not created:
+            updated = False
+            if not user.first_name and first_name:
+                user.first_name = first_name
+                updated = True
+            if not user.last_name and last_name:
+                user.last_name = last_name
+                updated = True
+            if updated:
+                user.save()
 
-class CustomTokenRefreshView(TokenRefreshView):
-   
-    def post(self, request, *args, **kwargs):
-        # Read the refresh token from the cookie
-        refresh_token = request.COOKIES.get('refresh_token')
-        if not refresh_token:
-            return Response(
-                {"detail": "Refresh token is missing"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+        # Return JWT
+        refresh = RefreshToken.for_user(user)
+        return Response({
+            "access": str(refresh.access_token),
+            "refresh": str(refresh),
+        })
 
-        # Add the refresh token to the request data
-        request.data['refresh'] = refresh_token
+    except ValueError:
+        return Response({"error": "Invalid token"}, status=HTTP_400_BAD_REQUEST)
 
-        return super().post(request, *args, **kwargs)

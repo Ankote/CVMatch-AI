@@ -13,7 +13,7 @@ from rest_framework.permissions import IsAuthenticated
 
 
 @api_view(['POST'])
-@permission_classes(IsAuthenticated)
+@permission_classes([IsAuthenticated])
 def gemini_match(request):
     print('the request for Gemini arrived', file = sys.stderr)
     if request.method == "POST" and request.FILES.get("pdf"):

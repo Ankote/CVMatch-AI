@@ -1,6 +1,26 @@
 
 
 services:
+
+  db:
+    image: postgres:17
+    env_file:
+      -  ./backend/.env  # Load environment variables from .env file
+    ports:
+      - "5433:5432"  # Map host port 5433 to container port 5432
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  adminer:
+    image: adminer:latest
+    container_name: adminer_cv_matcher
+    restart: always
+    ports:
+      - "8080:8080"
+    env_file:
+      - ./.env
+    depends_on:
+        - db
   backend:
     build:
       context: .
@@ -8,7 +28,7 @@ services:
     volumes:
       - ./backend:/app
     env_file:
-      - ./backend/.env
+      - ./.env
     ports:
       - "8000:8000"
     restart: unless-stopped
@@ -21,3 +41,6 @@ services:
       - "3000:80"  # Nginx serves on 80
     depends_on:
       - backend
+
+volumes:
+  postgres_data:  # Define a named volume for PostgreSQL data
