@@ -21,13 +21,13 @@ const PrivateRoute = () => {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ token }),
+      body: JSON.stringify({ token:token }),
     })
       .then((res) => {
         if (res.ok) {
           setIsValid(true);
         } else {
-          localStorage.removeItem("my_token"); // cleanup
+          // localStorage.removeItem("my_token"); // cleanup
           setIsValid(false);
         }
       })

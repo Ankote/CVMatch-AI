@@ -138,28 +138,6 @@ body {
   margin-top: 1.5rem !important;
 }
 
-/* Logout button */
-.logout-button {
-  background: linear-gradient(135deg, #ff6b6b, #ee5a52) !important;
-  color: white !important;
-  border: none !important;
-  padding: 0.75rem 1.5rem !important;
-  border-radius: 12px !important;
-  font-weight: 600 !important;
-  font-size: 0.9rem !important;
-  cursor: pointer !important;
-  transition: all 0.3s ease !important;
-  box-shadow: 0 4px 15px rgba(238, 90, 82, 0.3) !important;
-  margin-top: 1rem !important;
-  font-family: "Inter", sans-serif !important;
-}
-
-.logout-button:hover {
-  transform: translateY(-2px) !important;
-  box-shadow: 0 6px 20px rgba(238, 90, 82, 0.4) !important;
-  background: linear-gradient(135deg, #ff5252, #e53935) !important;
-}
-
 /* Google Login Button Styling */
 .google-login-button {
   display: flex !important;
@@ -288,4 +266,22 @@ body {
 /* Smooth transitions */
 * {
   transition: all 0.3s ease;
+}
+
+.logout-button {
+  background: none !important;
+  border: none !important;
+  color: #ffffff !important;
+  text-decoration: underline;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: "Inter", sans-serif;
+  margin-top: 1.5rem;
+  transition: color 0.3s ease;
+}
+
+.logout-button:hover {
+  color: #c3bafa !important;
+  text-decoration: none;
 }

@@ -3,7 +3,7 @@ import { useNavigate, useLocation, useNavigation } from "react-router-dom";
 import { loginUser } from "../../api/api";
 import { GoogleLogin } from '@react-oauth/google';
 import { useAuth } from "../../context/AuthProvider";
-
+import { verifierToken } from "../../api/api";
 import "./Login.css";
 export default function Login() {
   const [loginFormData, setLoginFormData] = React.useState({
@@ -15,24 +15,24 @@ export default function Login() {
   const { accessToken, setAccessToken } = useAuth();
   const [status, setStatus] = React.useState("idle");
   const [error, setError] = React.useState(null);
-  const message = location.state?.message || "";
   const navigate = useNavigate();
   const from = location.state?.from || "/match";
-
-  // //console.log(`ac1 : ${accessToken}`)
-  React.useEffect(() => {
-    // //console.log(`ac2 : ${accessToken}`);
-    if (accessToken) {
-      navigate(from);
+  
+  React.useEffect( () => {
+    async function fetchData() 
+    {
+      const isAuth = await verifierToken()
+      if (isAuth) {
+        navigate(from);
+      }
     }
-  }, [accessToken]);
-
-  //console.log("here\n");
-
+    fetchData()
+    }, [accessToken, navigate, from]);
+  
   async function handleSubmit(e) {
     e.preventDefault();
     const formEl = new FormData(e.currentTarget);
-    const email = formEl.get("email");
+    const email = formEl.get("username");
     const password = formEl.get("password");
     setStatus("submitting");
     try {
@@ -64,11 +64,11 @@ export default function Login() {
 
         <form onSubmit={handleSubmit} className="login-form">
           <input
-            name="email"
-            onChange={handleChange}
-            type="text"
-            placeholder="Username"
-            value={loginFormData.email}
+              name="username"
+              onChange={handleChange}
+              type="text"
+              placeholder="Username/Email"
+              value={loginFormData.username}
           />
           <input
             name="password"

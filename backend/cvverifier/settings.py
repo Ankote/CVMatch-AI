@@ -55,16 +55,21 @@ INSTALLED_APPS = [
     'users',
     'corsheaders',
     'oauth2_provider',
+    'rest_framework_simplejwt.token_blacklist',
 
 ]
 
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=1),
     'SLIDING_TOKEN_REFRESH_LIFETIME': timedelta(days=1),
     'SLIDING_TOKEN_LIFETIME': timedelta(days=30),
     'SLIDING_TOKEN_REFRESH_LIFETIME_LATE_USER': timedelta(days=1),
-    'SLIDING_TOKEN_LIFETIME_LATE_USER': timedelta(days=30),
+    'SLIDING_TOKEN_LIFETIME_LATE_USER': timedelta(days=30), 
+    'AUTH_COOKIE': 'refresh_token',  # Cookie name
+    'AUTH_COOKIE_SECURE': True,     # Use HTTPS
+    'AUTH_COOKIE_HTTP_ONLY': True,  # Prevent JS access
+    'AUTH_COOKIE_SAMESITE': 'Strict',
 }
 AUTH_USER_MODEL = 'users.User'
 LOGIN_URL = '/admin/login/'
@@ -83,7 +88,11 @@ CORS_ALLOWED_ORIGINS = [
 ]
 CORS_ALLOW_CREDENTIALS = True
 
+CSRF_COOKIE_SAMESITE = "Lax"
+SESSION_COOKIE_SAMESITE = "Lax"
 
+# Optional for refresh_token cookie
+CORS_EXPOSE_HEADERS = ["Set-Cookie"]
 MIDDLEWARE = ['corsheaders.middleware.CorsMiddleware'] + MIDDLEWARE
 CORS_ALLOW_ALL_ORIGINS = True  # or restrict to React host
 ROOT_URLCONF = 'cvverifier.urls'

@@ -1,6 +1,5 @@
 import axios from "./axios";
 import Cookies from "js-cookie";
-import { useAuth } from "../context/AuthProvider";
 const domain = "http://127.0.0.1:8000/";
 
 function sleep(ms) {
@@ -34,11 +33,10 @@ export async function loginUser(creds) {
 
 export async function verifierToken() {
   const token = localStorage.getItem("my_token");
-
   try {
     const response = await axios.post(
       "http://127.0.0.1:8000/auth/verify/",
-      { token }, // This becomes JSON: { "token": "value" }
+      { token: token }, // This becomes JSON: { "token": "value" }
       {
         headers: {
           "Content-Type": "application/json",
@@ -49,11 +47,35 @@ export async function verifierToken() {
 
     return response.status;
   } catch (error) {
-    console.error(
-      "Token verify failed:",
-      error.response?.data || error.message
-    );
-    return false;
+    try{
+      
+
+      const response = await axios.post(
+      "/auth/token/refresh/", // ✅ Fixed URL
+      {}, // ✅ Empty body since refresh token is in HTTP-only cookie
+      { withCredentials: true } // ✅ Ensures cookies are sent
+     );
+     localStorage.setItem("my_token", response.data.access)
+     
+     return true
+    }
+    catch{
+      return false
+    }
   }
 }
-http://localhost:8000/auth/token/verify/
+
+export async function Logout() {
+  localStorage.removeItem("my_token");
+  try {
+    const response = await axios.post(
+      "/auth/logout/",
+      {}, // no body
+      { withCredentials: true } // send cookies
+    );
+    return response.status;
+  } catch (error) {
+    console.error("Logout error:", error.response?.data || error.message);
+    return error;
+  }
+}

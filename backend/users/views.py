@@ -111,3 +111,57 @@ def google_login(request):
     except ValueError:
         return Response({"error": "Invalid token"}, status=HTTP_400_BAD_REQUEST)
 
+
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+class CustomTokenObtainPairView(TokenObtainPairView):
+    def post(self, request, *args, **kwargs):
+        response = super().post(request, *args, **kwargs)
+
+        refresh_token = response.data.get("refresh")
+        if refresh_token:
+            response.set_cookie(
+                key='refresh_token',
+                value=refresh_token,
+                httponly=True,
+            # Optional: remove refresh token from body so it's only in cookie
+                secure=False,           # 👈 allow on localhost
+                samesite='Lax',
+                max_age=30 * 24 * 60 * 60,
+            )
+            # Optional: remove refresh token from body so it's only in cookie
+            del response.data["refresh"]
+
+        return response
+
+
+from rest_framework_simplejwt.exceptions import InvalidToken
+class CookieTokenRefreshView(TokenRefreshView):
+    def post(self, request, *args, **kwargs):
+        refresh_token = request.COOKIES.get('refresh_token')
+        print(f"refresh  : {refresh_token}", file=sys.stderr)
+        if not refresh_token:
+            raise InvalidToken("No refresh token found in cookies")
+
+        request.data['refresh'] = refresh_token
+
+        return super().post(request, *args, **kwargs)
+    
+
+class LogoutView(APIView):
+    def post(self, request):
+        try:
+            refresh_token = request.COOKIES.get("refresh_token")
+            print(f"refresh verifier: {refresh_token}", file=sys.stderr)
+            token = RefreshToken(refresh_token)
+            token.blacklist()
+
+            response = Response({"message": "Successfully logged out"}, status=status.HTTP_200_OK)
+            response.delete_cookie(
+                key='refresh_token',
+                path='/',
+                secure=True,
+                samesite='Strict'
+            )
+            return response
+        except Exception as e:
+            return Response({"error": "Invalid token or already blacklisted"}, status=status.HTTP_400_BAD_REQUEST)

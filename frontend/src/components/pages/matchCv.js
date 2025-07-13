@@ -1,15 +1,31 @@
 import { useState } from 'react';
 import './matchCv.css'
+import { verifierToken } from '../../api/api';
+import React  from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
+import { Logout } from '../../api/api';
 function MatchCv() {
   const [cvFile, setCvFile] = useState(null);
   const [jobText, setJobText] = useState('');
   const [result, setResult] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const token = localStorage.getItem('my_token');
 
+  const location = useLocation();
+  const navigate = useNavigate();
   const handleSubmit = async (e) => {
-    e.preventDefault();
+
+    
+      e.preventDefault();
+      const isAuth = await verifierToken()
+      if (!isAuth) {
+        navigate('/login');
+      }
+      
+    const token = localStorage.getItem('my_token');
+
+
     setLoading(true);
     setResult('');
     setError(null);
@@ -40,6 +56,12 @@ function MatchCv() {
       setLoading(false);
     }
   };
+  
+  // Inside the component
+async function handleLogout() {
+  await Logout();
+  navigate("/login");
+}
 
   return (
     <div className="App">
@@ -59,6 +81,10 @@ function MatchCv() {
           {loading ? 'Matching...' : 'Match'}
         </button>
       </form>
+
+      <button onClick={handleLogout} className="logout-button">
+        Logout
+      </button>
 
       {loading && <div className="loading">Processing your CV... please wait ⏳</div>}
 
